@@ -1,6 +1,7 @@
-const content = document.querySelector("#cards");
+const content = document.querySelector(".cards");
 const button = document.querySelector(".button");
 const searchPokedex = document.querySelector(".search");
+const pokecount = document.querySelector(".pokenames");
 
 let generation;
 fetch("https://pokeapi.co/api/v2/generation")
@@ -9,7 +10,9 @@ fetch("https://pokeapi.co/api/v2/generation")
     generation = data.results;
     let pokemon = generation
       .map((item, index) => {
-        return `<button class = "btn" onClick="getPokemon(${index}+1)">${item.name}</button>`;
+        return `<button class = "btn" onClick="getPokemon(${index}+1)">${capitalize(
+          item.name.split("-")[0].substring(0, 3)
+        )}${index + 1}</button>`;
       })
       .join("");
     button.innerHTML = pokemon;
@@ -20,6 +23,14 @@ let pSpecies = [];
 
 const getPokemon = (generationNumber) => {
   searchPokedex.innerHTML = "";
+  const i = document.createElement("input");
+  i.id = "search";
+  i.placeholder = "Search";
+  i.type = "search";
+  i.addEventListener("input", (event) => {
+    searchPokemon(event.target.value);
+  });
+  searchPokedex.appendChild(i);
   pSpecies = [];
   const url = `https://pokeapi.co/api/v2/generation/${generationNumber}`;
   fetch(url)
@@ -52,43 +63,43 @@ const getPokemon = (generationNumber) => {
       });
 
       Promise.all(pokemonList).then((unUsedRes) => {
-        const i = document.createElement("input");
-        i.id = "search";
-        i.placeholder = "Search...";
-        i.type = "text";
-        i.onkeyup = searchPokemon;
-        searchPokedex.appendChild(i);
-
         let itemData = pSpecies.map((item) => {
-          return `<div class="card">
-          <img src = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${
-            item.number
-          }.png" />
-          <h2>${item.name}</h2>
-          <span>${item.types.toString()}</span>
-          </div>`;
+          return getCard(item.number, item.types, item.name);
         });
+        pokecount.innerHTML = `<span>There are ${species.length} pokemons in generation ${generationNumber}</span>`;
+
+        content.innerHTML = itemData.join("");
+
         content.innerHTML = itemData.join("");
       });
     });
 };
-const searchPokemon = () => {
-  const searchInput = document.querySelector("#search");
+const searchPokemon = (searchInput) => {
   const pokeFilter = pSpecies.filter((item) => {
-    const pokeName = item.name.startsWith(searchInput.value);
+    const pokeName = item.name.startsWith(searchInput.toLowerCase());
     return pokeName === true;
   });
 
   let itemData2 = pokeFilter.map((item) => {
-    return `<div class="card">
-    <img src = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${
-      item.number
-    }.png" />
-    <h2>${item.name}</h2>
-    <span>${item.types.toString()}</span>
-    </div>`;
+    return getCard(item.number, item.types, item.name);
   });
   content.innerHTML = itemData2.join("");
+};
+function capitalize(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+const getCard = (number, types, name) => {
+  return `<div class="card">
+      <img class="pokemonImage" src = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${number}.png" />
+      <h2>${capitalize(name)}</h2>
+      ${types
+        .map((type) => {
+          const typeUrl = `./assets/pokemon_types_icons/${type}.png`;
+          return `<img class="typeIcon" src=${typeUrl}></img>`;
+        })
+        .join("")}
+      </div>`;
 };
 // let pokeData = [];
 // let newData = [];
